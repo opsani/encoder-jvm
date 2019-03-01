@@ -56,7 +56,7 @@ def test_describe_no_current_value_with_default():
         'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'default': 15, 'value': 15, 'type': 'range', 'unit': ''}}
 
 
-def test_describe_unsupported_settings_provided():
+def test_describe_unsupported_options_provided():
     config = {'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
                            'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base}
     descriptor = describe(config, ['java', '-server',
