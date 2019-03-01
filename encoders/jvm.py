@@ -1,9 +1,13 @@
 # noinspection PyUnresolvedReferences
-from encoders.base import BaseEncoder, EncoderConfigException, EncoderRuntimeException, RangeSetting,\
+from abc import ABC
+
+# noinspection PyUnresolvedReferences
+from encoders.base import Encoder as BaseEncoder, RangeSetting as BaseRangeSetting, \
+    EncoderConfigException, EncoderRuntimeException, \
     SettingConfigException, SettingRuntimeException, q
 
 
-class IntGbToStrPrefixMbEncoder:
+class IntToGbValueEncoder:
 
     @staticmethod
     def encode(value):
@@ -17,7 +21,7 @@ class IntGbToStrPrefixMbEncoder:
         return int(val[:-1]) / 1024
 
 
-class StrToIntEncoder:
+class StrToIntValueEncoder:
 
     @staticmethod
     def encode(value):
@@ -28,7 +32,7 @@ class StrToIntEncoder:
         return int(data)
 
 
-class JavaOptionSetting(RangeSetting):
+class RangeSetting(BaseRangeSetting):
     value_encoder = None
 
     def __init__(self, config):
@@ -47,15 +51,23 @@ class JavaOptionSetting(RangeSetting):
         value = self.validate_value(value)
         return ['-XX:{}={}'.format(self.name, self.value_encoder.encode(value))]
 
+    def filter_data(self, data):
+        def predicate(arg):
+            return arg.startswith('-XX:{}'.format(self.name))
+        return list(filter(predicate, data))
+
     def validate_data(self, data):
-        found_opts = list(filter(lambda arg: arg.startswith('-XX:{}'.format(self.name)), data))
-        if len(found_opts) > 1:
+        if not isinstance(data, list):
+            raise SettingRuntimeException('Expected list on input for RangeSetting. '
+                                          'Got {} instead.'.format(q(type(data).__name__)))
+        opts = self.filter_data(data)
+        if len(opts) > 1:
             raise SettingRuntimeException('Received multiple values for setting {}, only one value is allowed '
                                           'on decode'.format(q(self.name)))
-        if not found_opts and self.default is None:
+        if not opts and self.default is None:
             raise SettingRuntimeException('No value found to decode for setting {} and no '
                                           'default value was configured.'.format(q(self.name)))
-        return found_opts
+        return opts
 
     def decode_option(self, data):
         """
@@ -75,21 +87,21 @@ class JavaOptionSetting(RangeSetting):
         return self.default
 
 
-class MaxHeapSizeSetting(JavaOptionSetting):
-    value_encoder = IntGbToStrPrefixMbEncoder()
+class MaxHeapSizeSetting(RangeSetting):
+    value_encoder = IntToGbValueEncoder()
     name = 'MaxHeapSize'
     unit = 'GiB'
     min = .5
     step = .125
 
 
-class GCTimeRatioSetting(JavaOptionSetting):
-    value_encoder = StrToIntEncoder()
+class GCTimeRatioSetting(RangeSetting):
+    value_encoder = StrToIntValueEncoder()
     name = 'GCTimeRatio'
     min = 9
     max = 99
     step = 1
-    can_relax = False
+    relaxable = False
 
 
 class Encoder(BaseEncoder):
@@ -104,7 +116,7 @@ class Encoder(BaseEncoder):
                 setting_class = globals()['{}Setting'.format(name)]
             except KeyError:
                 raise EncoderConfigException('Setting "{}" is not supported in java-opts encoder.'.format(name))
-            self.settings[name] = setting_class(setting or {})
+            self.settings[name] = setting_class(setting)
 
     def describe(self):
         settings = []
@@ -113,22 +125,22 @@ class Encoder(BaseEncoder):
         return dict(settings)
 
     def encode_multi(self, values):
-        ret = []
+        encoded = []
         values_to_encode = values.copy()
 
-        ret.extend(self.config.get('before', []))
+        encoded.extend(self.config.get('before', []))
 
         for name, setting in self.settings.items():
-            ret.extend(setting.encode_option(values_to_encode.pop(name, None)))
+            encoded.extend(setting.encode_option(values_to_encode.pop(name, None)))
 
-        ret.extend(self.config.get('after', []))
+        encoded.extend(self.config.get('after', []))
 
         if values_to_encode:
-            raise EncoderRuntimeException('We received settings to encode we do not support {}'
-                                          ''.format(list(values_to_encode.keys())))
+            raise EncoderRuntimeException('We received settings to encode we do not support: {}'
+                                          ''.format(', '.join(values_to_encode.keys())))
 
-        return ret
+        return encoded
 
     def decode_multi(self, data):
-        return dict((name, dict(value=setting.decode_option(data)))
-                    for name, setting in self.settings.items())
+        return {name: setting.decode_option(data)
+                for name, setting in self.settings.items()}
