@@ -41,6 +41,11 @@ class RangeSetting(BaseRangeSetting):
             raise NotImplementedError('You must provide value encoder for setting {} '
                                       'handled by class {}'.format(q(self.name), self.__class__.__name__))
 
+    def get_value_encoder(self):
+        if callable(self.value_encoder):
+            return self.value_encoder(self)
+        return self.value_encoder
+
     def encode_option(self, value):
         """
         Encodes single primitive value into a list of primitive values (zero or more).
@@ -49,7 +54,7 @@ class RangeSetting(BaseRangeSetting):
         :return list: List of multiple primitive values
         """
         value = self.validate_value(value)
-        return ['-XX:{}={}'.format(self.name, self.value_encoder.encode(value))]
+        return ['-XX:{}={}'.format(self.name, self.get_value_encoder().encode(value))]
 
     def filter_data(self, data):
         def predicate(arg):
@@ -80,7 +85,7 @@ class RangeSetting(BaseRangeSetting):
         if opts:
             opt = opts[0]
             try:
-                return self.value_encoder.decode(opt.split('=', 1)[1])
+                return self.get_value_encoder().decode(opt.split('=', 1)[1])
             except ValueError as e:
                 raise SettingRuntimeException('Invalid value to decode for setting {}. '
                                               'Error: {}. Arg: {}'.format(q(self.name), str(e), opt))
