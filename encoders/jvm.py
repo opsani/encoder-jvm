@@ -50,6 +50,7 @@ class IntToPlusMinusValueEncoder:
 class RangeSetting(BaseRangeSetting):
     value_encoder = None
     formats = ('XX:{name}={value}',)
+    shorthand = None
     preferred_format = 0
 
     def __init__(self, config):
@@ -81,7 +82,7 @@ class RangeSetting(BaseRangeSetting):
         else:
             idx = format_idx
         sformat = '-' + self.formats[idx]
-        formatted = sformat.format(name=self.name, value=value)
+        formatted = sformat.format(name=self.name, value=value, shorthand=self.shorthand)
         return formatted
 
     def get_first_format_match(self, value):
@@ -155,12 +156,23 @@ class BooleanSetting(RangeSetting):
     freeze_range = 1
 
 
-class MaxHeapSizeSetting(RangeSetting):
+class HeapSizeSetting(RangeSetting, ABC):
     value_encoder = IntToGbValueEncoder()
-    name = 'MaxHeapSize'
+    formats = ('XX:{name}={value}', 'X{shorthand}{value}')
     unit = 'GiB'
     min = .5
     step = .125
+
+
+class MaxHeapSizeSetting(HeapSizeSetting):
+    name = 'MaxHeapSize'
+    shorthand = 'mx'
+
+
+class InitialHeapSizeSetting(HeapSizeSetting):
+    name = 'InitialHeapSize'
+    formats = ('X{shorthand}{value}',)
+    shorthand = 'ms'
 
 
 class GCTimeRatioSetting(RangeSetting):

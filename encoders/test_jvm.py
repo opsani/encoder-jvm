@@ -70,6 +70,12 @@ def test_describe_unsupported_settings_provided():
         'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'value': 50, 'type': 'range', 'unit': ''}}
 
 
+def test_describe_multiple_option_formats_provided():
+    config = {'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}, **config_base}
+    with pytest.raises(SettingRuntimeException):
+        describe(config, ['-XX:MaxHeapSize=5120m', '-Xmx4096m'])
+
+
 def test_describe_no_config_provided():
     with pytest.raises(EncoderConfigException):
         describe(None, ['-XX:MaxHeapSize=1024m'])
