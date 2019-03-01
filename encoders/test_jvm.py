@@ -177,6 +177,12 @@ def test_encode_boolean_setting():
     assert encoded == ['-XX:-AlwaysPreTouch']
 
 
+def test_encode_freezed_setting_reconfigure():
+    with pytest.raises(SettingConfigException):
+        encode({'settings': {'AlwaysPreTouch': {'max': 2}}, **config_base},
+               {'AlwaysPreTouch': 2})
+
+
 def test_encode_no_values_provided():
     with pytest.raises(SettingRuntimeException):
         encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}, **config_base},
