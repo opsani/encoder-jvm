@@ -175,6 +175,14 @@ class InitialHeapSizeSetting(HeapSizeSetting):
     shorthand = 'ms'
 
 
+class InitialEdenHeapSizeSetting(HeapSizeSetting):
+    name = 'InitialEdenHeapSize'
+    formats = ('X{shorthand}{value}', 'X{shorthand}:{value}')
+    shorthand = 'mn'
+    min = .625 / 1024
+    step = 32 / 1024
+
+
 class GCTimeRatioSetting(RangeSetting):
     value_encoder = IntToStrValueEncoder()
     name = 'GCTimeRatio'
