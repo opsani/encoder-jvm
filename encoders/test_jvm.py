@@ -30,11 +30,14 @@ def test_describe_one_setting():
 def test_describe_boolean_setting():
     config = {'settings': {'AlwaysPreTouch': None}, **config_base}
     descriptor = describe(config, ['-XX:AlwaysPreTouch'])
-    assert descriptor == {'AlwaysPreTouch': {'min': 0, 'max': 1, 'step': 1, 'value': 1, 'type': 'range', 'unit': ''}}
+    assert descriptor == {'AlwaysPreTouch': {'min': 0, 'max': 1, 'step': 1, 'default': 0, 'value': 1,
+                                             'type': 'range', 'unit': ''}}
     descriptor = describe(config, ['-XX:+AlwaysPreTouch'])
-    assert descriptor == {'AlwaysPreTouch': {'min': 0, 'max': 1, 'step': 1, 'value': 1, 'type': 'range', 'unit': ''}}
+    assert descriptor == {'AlwaysPreTouch': {'min': 0, 'max': 1, 'step': 1, 'default': 0, 'value': 1,
+                                             'type': 'range', 'unit': ''}}
     descriptor = describe(config, ['-XX:-AlwaysPreTouch'])
-    assert descriptor == {'AlwaysPreTouch': {'min': 0, 'max': 1, 'step': 1, 'value': 0, 'type': 'range', 'unit': ''}}
+    assert descriptor == {'AlwaysPreTouch': {'min': 0, 'max': 1, 'step': 1, 'default': 0, 'value': 0,
+                                             'type': 'range', 'unit': ''}}
 
 
 def test_describe_one_setting_defaults():

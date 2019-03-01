@@ -22,7 +22,7 @@ class IntToGbValueEncoder:
         return int(val[:-1]) / 1024
 
 
-class StrToIntValueEncoder:
+class IntToStrValueEncoder:
 
     @staticmethod
     def encode(value):
@@ -158,7 +158,7 @@ class BooleanSetting(RangeSetting):
 
 class HeapSizeSetting(RangeSetting, ABC):
     value_encoder = IntToGbValueEncoder()
-    formats = ('XX:{name}={value}', 'X{shorthand}{value}')
+    formats = ('XX:{name}={value}', 'X{shorthand}{value}', 'X{shorthand}:{value}')
     unit = 'GiB'
     min = .5
     step = .125
@@ -171,12 +171,12 @@ class MaxHeapSizeSetting(HeapSizeSetting):
 
 class InitialHeapSizeSetting(HeapSizeSetting):
     name = 'InitialHeapSize'
-    formats = ('X{shorthand}{value}',)
+    formats = ('X{shorthand}{value}', 'X{shorthand}:{value}')
     shorthand = 'ms'
 
 
 class GCTimeRatioSetting(RangeSetting):
-    value_encoder = StrToIntValueEncoder()
+    value_encoder = IntToStrValueEncoder()
     name = 'GCTimeRatio'
     min = 9
     max = 99
@@ -185,36 +185,53 @@ class GCTimeRatioSetting(RangeSetting):
 
 
 # Boolean settings
-class AlwaysPreTouchSetting(BooleanSetting):
-    name = 'AlwaysPreTouch'
-
-
 class CMSParallelRemarkEnabledSetting(BooleanSetting):
     name = 'CMSParallelRemarkEnabled'
+    default = 0
 
 
 class UseCMSInitiatingOccupancyOnlySetting(BooleanSetting):
     name = 'UseCMSInitiatingOccupancyOnly'
+    default = 0
+
+
+class CMSInitiatingOccupancyFractionSetting(RangeSetting):
+    value_encoder = IntToStrValueEncoder
+    name = 'CMSInitiatingOccupancyFraction'
+    min = 50
+    max = 95
+    step = 1
+    default = 92
 
 
 class CMSScavengeBeforeRemarkSetting(BooleanSetting):
     name = 'CMSScavengeBeforeRemark'
+    default = 0
 
 
 class ScavengeBeforeFullGCSetting(BooleanSetting):
     name = 'ScavengeBeforeFullGC'
+    default = 0
+
+
+class AlwaysPreTouchSetting(BooleanSetting):
+    name = 'AlwaysPreTouch'
+    default = 0
 
 
 class ExplicitGCInvokesConcurrentSetting(BooleanSetting):
     name = 'ExplicitGCInvokesConcurrent'
+    default = 0
 
 
 class ParallelRefProcEnabledSetting(BooleanSetting):
     name = 'ParallelRefProcEnabled'
+    default = 0
 
 
 class UseStringDeduplicationSetting(BooleanSetting):
     name = 'UseStringDeduplication'
+    default = 0
 
 
 class Encoder(BaseEncoder):
