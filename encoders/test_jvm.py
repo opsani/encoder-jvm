@@ -27,6 +27,16 @@ def test_describe_one_setting():
     assert descriptor == {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'value': 15, 'type': 'range', 'unit': ''}}
 
 
+def test_describe_boolean_setting():
+    config = {'settings': {'AlwaysPreTouch': None}, **config_base}
+    descriptor = describe(config, ['-XX:AlwaysPreTouch'])
+    assert descriptor == {'AlwaysPreTouch': {'min': 0, 'max': 1, 'step': 1, 'value': 1, 'type': 'range', 'unit': ''}}
+    descriptor = describe(config, ['-XX:+AlwaysPreTouch'])
+    assert descriptor == {'AlwaysPreTouch': {'min': 0, 'max': 1, 'step': 1, 'value': 1, 'type': 'range', 'unit': ''}}
+    descriptor = describe(config, ['-XX:-AlwaysPreTouch'])
+    assert descriptor == {'AlwaysPreTouch': {'min': 0, 'max': 1, 'step': 1, 'value': 0, 'type': 'range', 'unit': ''}}
+
+
 def test_describe_one_setting_defaults():
     config = {'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
                            'GCTimeRatio': None}, **config_base}
@@ -150,6 +160,15 @@ def test_encode_value_conversion():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': .125}}, **config_base},
                         {'MaxHeapSize': 1.625})
     assert encoded == ['-XX:MaxHeapSize=1664m']
+
+
+def test_encode_boolean_setting():
+    encoded, _ = encode({'settings': {'AlwaysPreTouch': None}, **config_base},
+                        {'AlwaysPreTouch': 1})
+    assert encoded == ['-XX:+AlwaysPreTouch']
+    encoded, _ = encode({'settings': {'AlwaysPreTouch': None}, **config_base},
+                        {'AlwaysPreTouch': 0})
+    assert encoded == ['-XX:-AlwaysPreTouch']
 
 
 def test_encode_no_values_provided():

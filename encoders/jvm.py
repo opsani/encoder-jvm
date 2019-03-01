@@ -33,6 +33,20 @@ class StrToIntValueEncoder:
         return int(data)
 
 
+class IntToPlusMinusValueEncoder:
+
+    @staticmethod
+    def encode(value):
+        return '+' if value else '-'
+
+    @staticmethod
+    def decode(data):
+        if data == '+' or data == '':
+            return 1
+        elif data == '-':
+            return 0
+
+
 class RangeSetting(BaseRangeSetting):
     value_encoder = None
     formats = ('XX:{name}={value}',)
@@ -132,6 +146,15 @@ class RangeSetting(BaseRangeSetting):
         return self.default
 
 
+class BooleanSetting(RangeSetting):
+    value_encoder = IntToPlusMinusValueEncoder()
+    formats = ('XX:{value}{name}',)
+    min = 0
+    max = 1
+    step = 1
+    freeze_range = 1
+
+
 class MaxHeapSizeSetting(RangeSetting):
     value_encoder = IntToGbValueEncoder()
     name = 'MaxHeapSize'
@@ -147,6 +170,39 @@ class GCTimeRatioSetting(RangeSetting):
     max = 99
     step = 1
     relaxable = False
+
+
+# Boolean settings
+class AlwaysPreTouchSetting(BooleanSetting):
+    name = 'AlwaysPreTouch'
+
+
+class CMSParallelRemarkEnabledSetting(BooleanSetting):
+    name = 'CMSParallelRemarkEnabled'
+
+
+class UseCMSInitiatingOccupancyOnlySetting(BooleanSetting):
+    name = 'UseCMSInitiatingOccupancyOnly'
+
+
+class CMSScavengeBeforeRemarkSetting(BooleanSetting):
+    name = 'CMSScavengeBeforeRemark'
+
+
+class ScavengeBeforeFullGCSetting(BooleanSetting):
+    name = 'ScavengeBeforeFullGC'
+
+
+class ExplicitGCInvokesConcurrentSetting(BooleanSetting):
+    name = 'ExplicitGCInvokesConcurrent'
+
+
+class ParallelRefProcEnabledSetting(BooleanSetting):
+    name = 'ParallelRefProcEnabled'
+
+
+class UseStringDeduplicationSetting(BooleanSetting):
+    name = 'UseStringDeduplication'
 
 
 class Encoder(BaseEncoder):
