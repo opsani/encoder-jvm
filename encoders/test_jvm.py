@@ -165,6 +165,15 @@ def test_encode_before_after_persist():
                        '-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar']
 
 
+def test_encode_string_output():
+    encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
+                         'before': ['java', '-server'],
+                         'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'],
+                         'output': 'string', **config_base},
+                        {'MaxHeapSize': 4})
+    assert encoded == 'java -server -XX:MaxHeapSize=4096m -javaagent:/tmp/newrelic/newrelic.jar -jar /app.jar'
+
+
 def test_encode_value_conversion():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': .125}}, **config_base},
                         {'MaxHeapSize': 1.625})

@@ -277,6 +277,9 @@ class Encoder(BaseEncoder):
             raise EncoderRuntimeException('We received settings to encode we do not support: {}'
                                           ''.format(', '.join(values_to_encode.keys())))
 
+        if self.config.get('output') == 'string':
+            return ' '.join(encoded)
+
         return encoded
 
     def decode_multi(self, data):
