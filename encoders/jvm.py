@@ -1,4 +1,5 @@
 # noinspection PyUnresolvedReferences
+import re
 from abc import ABC
 
 # noinspection PyUnresolvedReferences
@@ -34,12 +35,48 @@ class StrToIntValueEncoder:
 
 class RangeSetting(BaseRangeSetting):
     value_encoder = None
+    formats = ('XX:{name}={value}',)
+    preferred_format = 0
 
     def __init__(self, config):
         super().__init__(config)
         if self.value_encoder is None:
             raise NotImplementedError('You must provide value encoder for setting {} '
                                       'handled by class {}'.format(q(self.name), self.__class__.__name__))
+
+    def check_class_defaults(self):
+        super().check_class_defaults()
+        if not self.formats or not isinstance(self.formats, (list, tuple, set)):
+            raise NotImplementedError('Attribute `formats` in the setting class {} must be a list with at least '
+                                      'one defined setting format. Found {}.'.format(self.__class__.__name__,
+                                                                                     q(self.formats)))
+        if (
+                self.preferred_format is None
+                or not isinstance(self.preferred_format, int)
+                or self.preferred_format < 0
+                or self.preferred_format >= len(self.formats)
+        ):
+            raise NotImplementedError('Attribute `preferred_format` in the setting class {} '
+                                      'must be an integer in the range 0 to {}. '
+                                      'Found {}.'.format(self.__class__.__name__, len(self.formats),
+                                                         q(self.preferred_format)))
+
+    def format_value(self, value, format_idx=None):
+        if format_idx is None:
+            idx = self.preferred_format
+        else:
+            idx = format_idx
+        sformat = '-' + self.formats[idx]
+        formatted = sformat.format(name=self.name, value=value)
+        return formatted
+
+    def get_first_format_match(self, value):
+        for format_idx, _ in enumerate(self.formats):
+            pattern = r'^{}$'.format(self.format_value('(.*)', format_idx))
+            match = re.match(pattern, value)
+            if match:
+                return match
+        return None
 
     def get_value_encoder(self):
         if callable(self.value_encoder):
@@ -54,11 +91,13 @@ class RangeSetting(BaseRangeSetting):
         :return list: List of multiple primitive values
         """
         value = self.validate_value(value)
-        return ['-XX:{}={}'.format(self.name, self.get_value_encoder().encode(value))]
+        encoded_value = self.get_value_encoder().encode(value)
+        return [self.format_value(encoded_value)]
 
     def filter_data(self, data):
-        def predicate(arg):
-            return arg.startswith('-XX:{}'.format(self.name))
+        def predicate(option):
+            return bool(self.get_first_format_match(option))
+
         return list(filter(predicate, data))
 
     def validate_data(self, data):
@@ -84,8 +123,9 @@ class RangeSetting(BaseRangeSetting):
         opts = self.validate_data(data)
         if opts:
             opt = opts[0]
+            value = self.get_first_format_match(opt).groups()[0]
             try:
-                return self.get_value_encoder().decode(opt.split('=', 1)[1])
+                return self.get_value_encoder().decode(value)
             except ValueError as e:
                 raise SettingRuntimeException('Invalid value to decode for setting {}. '
                                               'Error: {}. Arg: {}'.format(q(self.name), str(e), opt))
