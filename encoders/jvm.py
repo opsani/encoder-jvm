@@ -245,7 +245,7 @@ class UseStringDeduplicationSetting(BooleanSetting):
 class Encoder(BaseEncoder):
 
     def __init__(self, config):
-        self.config = config
+        super().__init__(config)
         self.settings = {}
 
         requested_settings = self.config.get('settings') or {}
