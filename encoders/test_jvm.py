@@ -134,23 +134,23 @@ Encode helper
 def test_encode():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
                                       'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base},
-                        {'MaxHeapSize': 4,
-                         'GCTimeRatio': 59})
+                        {'MaxHeapSize': {'value': 4},
+                         'GCTimeRatio': {'value': 59}})
     assert sorted(encoded) == sorted(['-XX:MaxHeapSize=4096m',
                                       '-XX:GCTimeRatio=59'])
 
 
 def test_encode_one_setting():
     encoded, _ = encode({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base},
-                        {'GCTimeRatio': 59})
+                        {'GCTimeRatio': {'value': 59}})
     assert sorted(encoded) == sorted(['-XX:GCTimeRatio=59'])
 
 
 def test_encode_one_setting_defaults():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
                                       'GCTimeRatio': None}, **config_base},
-                        {'MaxHeapSize': 4,
-                         'GCTimeRatio': 59})
+                        {'MaxHeapSize': {'value': 4},
+                         'GCTimeRatio': {'value': 59}})
     assert sorted(encoded) == sorted(['-XX:MaxHeapSize=4096m',
                                       '-XX:GCTimeRatio=59'])
 
@@ -159,7 +159,7 @@ def test_encode_before_after_persist():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
                          'before': ['java', '-server'],
                          'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'], **config_base},
-                        {'MaxHeapSize': 4})
+                        {'MaxHeapSize': {'value': 4}})
     assert encoded == ['java', '-server',
                        '-XX:MaxHeapSize=4096m',
                        '-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar']
@@ -170,29 +170,29 @@ def test_encode_string_output():
                          'before': ['java', '-server'],
                          'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'],
                          'output': 'string', **config_base},
-                        {'MaxHeapSize': 4})
+                        {'MaxHeapSize': {'value': 4}})
     assert encoded == 'java -server -XX:MaxHeapSize=4096m -javaagent:/tmp/newrelic/newrelic.jar -jar /app.jar'
 
 
 def test_encode_value_conversion():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': .125}}, **config_base},
-                        {'MaxHeapSize': 1.625})
+                        {'MaxHeapSize': {'value': 1.625}})
     assert encoded == ['-XX:MaxHeapSize=1664m']
 
 
 def test_encode_boolean_setting():
     encoded, _ = encode({'settings': {'AlwaysPreTouch': None}, **config_base},
-                        {'AlwaysPreTouch': 1})
+                        {'AlwaysPreTouch': {'value': 1}})
     assert encoded == ['-XX:+AlwaysPreTouch']
     encoded, _ = encode({'settings': {'AlwaysPreTouch': None}, **config_base},
-                        {'AlwaysPreTouch': 0})
+                        {'AlwaysPreTouch': {'value': 0}})
     assert encoded == ['-XX:-AlwaysPreTouch']
 
 
 def test_encode_freezed_setting_reconfigure():
     with pytest.raises(SettingConfigException):
         encode({'settings': {'AlwaysPreTouch': {'max': 2}}, **config_base},
-               {'AlwaysPreTouch': 2})
+               {'AlwaysPreTouch': {'value': 2}})
 
 
 def test_encode_no_values_provided():
@@ -208,57 +208,57 @@ def test_encode_no_values_provided():
 def test_encode_invalid_type_value_provided():
     with pytest.raises(SettingRuntimeException):
         encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}, **config_base},
-               {'MaxHeapSize': '1'})
+               {'MaxHeapSize': {'value': '1'}})
 
 
 def test_encode_setting_wrong_configuration_type():
     with pytest.raises(SettingConfigException):
-        encode({'settings': {'MaxHeapSize': 5}, **config_base}, {'MaxHeapSize': 2})
+        encode({'settings': {'MaxHeapSize': 5}, **config_base}, {'MaxHeapSize': {'value': 2}})
 
 
 def test_encode_setting_unsupported_option():
     with pytest.raises(SettingConfigException):
         encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'magic_wand': True}}, **config_base},
-               {'MaxHeapSize': 2})
+               {'MaxHeapSize': {'value': 2}})
 
 
 def test_encode_range_setting_value_validation():
     with pytest.raises(SettingConfigException):
         encode({'settings': {'MaxHeapSize': {'min': None, 'max': 6, 'step': 1}}, **config_base},
-               {'MaxHeapSize': 2})
+               {'MaxHeapSize': {'value': 2}})
 
     with pytest.raises(SettingConfigException):
         encode({'settings': {'MaxHeapSize': {'min': 1, 'step': 1}}, **config_base},
-               {'MaxHeapSize': 2})
+               {'MaxHeapSize': {'value': 2}})
 
     with pytest.raises(SettingConfigException):
         encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': None}}, **config_base},
-               {'MaxHeapSize': 2})
+               {'MaxHeapSize': {'value': 2}})
 
     with pytest.raises(SettingConfigException):
         encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 0}}, **config_base},
-               {'MaxHeapSize': 2})
+               {'MaxHeapSize': {'value': 2}})
 
     with pytest.raises(SettingConfigException):
         encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': -1}}, **config_base},
-               {'MaxHeapSize': 6})
+               {'MaxHeapSize': {'value': 6}})
 
     with pytest.raises(SettingConfigException):
         encode({'settings': {'MaxHeapSize': {'min': 6, 'max': 1, 'step': 1}}, **config_base},
-               {'MaxHeapSize': 2})
+               {'MaxHeapSize': {'value': 2}})
 
     with pytest.raises(SettingConfigException):
         encode({'settings': {'GCTimeRatio': {'min': 10, 'max': 90, 'step': 9}}, **config_base},
-               {'GCTimeRatio': 10})
+               {'GCTimeRatio': {'value': 10}})
 
     with pytest.raises(SettingRuntimeException):
         encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}, **config_base},
-               {'MaxHeapSize': 2.5})
+               {'MaxHeapSize': {'value': 2.5}})
 
     with pytest.raises(SettingRuntimeException):
         encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}, **config_base},
-               {'MaxHeapSize': 0})
+               {'MaxHeapSize': {'value': 0}})
 
     with pytest.raises(SettingRuntimeException):
         encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}, **config_base},
-               {'MaxHeapSize': 7})
+               {'MaxHeapSize': {'value': 7}})
