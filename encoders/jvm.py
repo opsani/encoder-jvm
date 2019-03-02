@@ -262,7 +262,7 @@ class Encoder(BaseEncoder):
             settings.append(setting.describe())
         return dict(settings)
 
-    def encode_multi(self, values):
+    def _encode_multi(self, values):
         encoded = []
         values_to_encode = values.copy()
 
@@ -277,11 +277,24 @@ class Encoder(BaseEncoder):
             raise EncoderRuntimeException('We received settings to encode we do not support: {}'
                                           ''.format(', '.join(values_to_encode.keys())))
 
-        if self.config.get('output') == 'string':
-            return ' '.join(encoded)
-
         return encoded
 
-    def decode_multi(self, data):
+    def encode_multi(self, values, expected_type=None):
+        encoded = self._encode_multi(values)
+        expected_type = 'str' if expected_type is None else expected_type
+        if expected_type == 'str':
+            return ' '.join(encoded)
+        if expected_type == 'list':
+            return encoded
+        raise EncoderConfigException('Unrecognized expected_type passed on encode in jvm encoder: {}. '
+                                     'Supported: "list", "str"'.format(q(expected_type)))
+
+    def _decode_multi(self, data):
         return {name: setting.decode_option(data)
                 for name, setting in self.settings.items()}
+
+    def decode_multi(self, data):
+        if isinstance(data, str):
+            # TODO: There might be cases with escaped spaces - this code is to be advanced.
+            data = data.split(' ')
+        return self._decode_multi(data)

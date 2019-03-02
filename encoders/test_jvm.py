@@ -133,7 +133,8 @@ Encode helper
 
 def test_encode():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
-                                      'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base},
+                                      'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}},
+                         'expected_type': 'list', **config_base},
                         {'MaxHeapSize': {'value': 4},
                          'GCTimeRatio': {'value': 59}})
     assert sorted(encoded) == sorted(['-XX:MaxHeapSize=4096m',
@@ -141,14 +142,16 @@ def test_encode():
 
 
 def test_encode_one_setting():
-    encoded, _ = encode({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base},
+    encoded, _ = encode({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}},
+                         'expected_type': 'list', **config_base},
                         {'GCTimeRatio': {'value': 59}})
     assert sorted(encoded) == sorted(['-XX:GCTimeRatio=59'])
 
 
 def test_encode_one_setting_defaults():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
-                                      'GCTimeRatio': None}, **config_base},
+                                      'GCTimeRatio': None},
+                         'expected_type': 'list', **config_base},
                         {'MaxHeapSize': {'value': 4},
                          'GCTimeRatio': {'value': 59}})
     assert sorted(encoded) == sorted(['-XX:MaxHeapSize=4096m',
@@ -158,33 +161,82 @@ def test_encode_one_setting_defaults():
 def test_encode_before_after_persist():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
                          'before': ['java', '-server'],
-                         'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'], **config_base},
+                         'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'],
+                         'expected_type': 'list', **config_base},
                         {'MaxHeapSize': {'value': 4}})
     assert encoded == ['java', '-server',
                        '-XX:MaxHeapSize=4096m',
                        '-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar']
 
 
-def test_encode_string_output():
+def test_encode_expected_type_from_config():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
                          'before': ['java', '-server'],
                          'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'],
-                         'output': 'string', **config_base},
+                         'expected_type': 'str', **config_base},
                         {'MaxHeapSize': {'value': 4}})
     assert encoded == 'java -server -XX:MaxHeapSize=4096m -javaagent:/tmp/newrelic/newrelic.jar -jar /app.jar'
 
 
+def test_encode_expected_type_string():
+    encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
+                         'before': ['java', '-server'],
+                         'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'], **config_base},
+                        {'MaxHeapSize': {'value': 4}},
+                        expected_type='str')
+    assert encoded == 'java -server -XX:MaxHeapSize=4096m -javaagent:/tmp/newrelic/newrelic.jar -jar /app.jar'
+
+
+def test_encode_expected_type_list():
+    encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
+                         'before': ['java', '-server'],
+                         'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'], **config_base},
+                        {'MaxHeapSize': {'value': 4}},
+                        expected_type='list')
+    assert encoded == ['java', '-server',
+                       '-XX:MaxHeapSize=4096m', '-javaagent:/tmp/newrelic/newrelic.jar',
+                       '-jar', '/app.jar']
+
+
+def test_encode_default_expected_type_string():
+    encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
+                         'before': ['java', '-server'],
+                         'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'], **config_base},
+                        {'MaxHeapSize': {'value': 4}})
+    assert encoded == 'java -server -XX:MaxHeapSize=4096m -javaagent:/tmp/newrelic/newrelic.jar -jar /app.jar'
+
+
+def test_encode_expected_type_provided_in_encode_and_config():
+    with pytest.raises(EncoderConfigException):
+        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
+                'before': ['java', '-server'],
+                'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'],
+                'expected_type': 'str', **config_base},
+               {'MaxHeapSize': {'value': 4}},
+               expected_type='list')
+
+
+def test_encode_unsupported_expected_type():
+    with pytest.raises(EncoderConfigException):
+        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
+                'before': ['java', '-server'],
+                'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'], **config_base},
+               {'MaxHeapSize': {'value': 4}},
+               expected_type=dict)
+
+
 def test_encode_value_conversion():
-    encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': .125}}, **config_base},
+    encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': .125}},
+                         'expected_type': 'list', **config_base},
                         {'MaxHeapSize': {'value': 1.625}})
     assert encoded == ['-XX:MaxHeapSize=1664m']
 
 
 def test_encode_boolean_setting():
-    encoded, _ = encode({'settings': {'AlwaysPreTouch': None}, **config_base},
+    encoded, _ = encode({'settings': {'AlwaysPreTouch': None}, 'expected_type': 'list', **config_base},
                         {'AlwaysPreTouch': {'value': 1}})
     assert encoded == ['-XX:+AlwaysPreTouch']
-    encoded, _ = encode({'settings': {'AlwaysPreTouch': None}, **config_base},
+    encoded, _ = encode({'settings': {'AlwaysPreTouch': None}, 'expected_type': 'list', **config_base},
                         {'AlwaysPreTouch': {'value': 0}})
     assert encoded == ['-XX:-AlwaysPreTouch']
 
