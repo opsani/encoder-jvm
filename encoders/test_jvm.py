@@ -30,13 +30,13 @@ def test_describe_one_setting():
 def test_describe_boolean_setting():
     config = {'settings': {'AlwaysPreTouch': None}, **config_base}
     descriptor = describe(config, ['-XX:AlwaysPreTouch'])
-    assert descriptor == {'AlwaysPreTouch': {'min': 0, 'max': 1, 'step': 1, 'default': 0, 'value': 1,
+    assert descriptor == {'AlwaysPreTouch': {'min': 0, 'max': 1, 'step': 1, 'value': 1,
                                              'type': 'range', 'unit': ''}}
     descriptor = describe(config, ['-XX:+AlwaysPreTouch'])
-    assert descriptor == {'AlwaysPreTouch': {'min': 0, 'max': 1, 'step': 1, 'default': 0, 'value': 1,
+    assert descriptor == {'AlwaysPreTouch': {'min': 0, 'max': 1, 'step': 1, 'value': 1,
                                              'type': 'range', 'unit': ''}}
     descriptor = describe(config, ['-XX:-AlwaysPreTouch'])
-    assert descriptor == {'AlwaysPreTouch': {'min': 0, 'max': 1, 'step': 1, 'default': 0, 'value': 0,
+    assert descriptor == {'AlwaysPreTouch': {'min': 0, 'max': 1, 'step': 1, 'value': 0,
                                              'type': 'range', 'unit': ''}}
 
 
@@ -55,8 +55,8 @@ def test_describe_no_current_value_with_default():
                            'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'default': 15}}, **config_base}
     descriptor = describe(config, [])
     assert descriptor == {
-        'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'default': 3, 'value': 3, 'type': 'range', 'unit': 'GiB'},
-        'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'default': 15, 'value': 15, 'type': 'range', 'unit': ''}}
+        'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'value': 3, 'type': 'range', 'unit': 'GiB'},
+        'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'value': 15, 'type': 'range', 'unit': ''}}
 
 
 def test_describe_unsupported_options_provided():
