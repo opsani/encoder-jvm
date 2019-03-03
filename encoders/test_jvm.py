@@ -11,7 +11,7 @@ Describe helper
 config_base = {'name': 'jvm'}
 
 
-def test_describe():
+def test_describe_list():
     config = {'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
                            'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base}
     descriptor = describe(config, ['-XX:MaxHeapSize=3072m',
@@ -20,6 +20,13 @@ def test_describe():
         'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'value': 3, 'type': 'range', 'unit': 'GiB'},
         'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'value': 15, 'type': 'range', 'unit': ''}}
 
+def test_describe_string():
+    config = {'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
+                           'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base}
+    descriptor = describe(config, '-XX:MaxHeapSize=3072m -XX:GCTimeRatio=15')
+    assert descriptor == {
+        'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'value': 3, 'type': 'range', 'unit': 'GiB'},
+        'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'value': 15, 'type': 'range', 'unit': ''}}
 
 def test_describe_one_setting():
     config = {'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base}
