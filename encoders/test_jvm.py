@@ -196,6 +196,14 @@ def test_encode_expected_type_list():
     assert encoded == ['java', '-server',
                        '-XX:MaxHeapSize=4096m', '-javaagent:/tmp/newrelic/newrelic.jar',
                        '-jar', '/app.jar']
+    encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
+                         'before': ['java', '-server'],
+                         'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'], **config_base},
+                        {'MaxHeapSize': {'value': 4}},
+                        expected_type=list)
+    assert encoded == ['java', '-server',
+                       '-XX:MaxHeapSize=4096m', '-javaagent:/tmp/newrelic/newrelic.jar',
+                       '-jar', '/app.jar']
 
 
 def test_encode_default_expected_type_string():

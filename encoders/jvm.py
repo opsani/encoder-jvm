@@ -281,10 +281,10 @@ class Encoder(BaseEncoder):
 
     def encode_multi(self, values, expected_type=None):
         encoded = self._encode_multi(values)
-        expected_type = 'str' if expected_type is None else expected_type
-        if expected_type == 'str':
+        expected_type = str if expected_type is None else expected_type
+        if expected_type in ('str', str):
             return ' '.join(encoded)
-        if expected_type == 'list':
+        if expected_type in ('list', list):
             return encoded
         raise EncoderConfigException('Unrecognized expected_type passed on encode in jvm encoder: {}. '
                                      'Supported: "list", "str"'.format(q(expected_type)))
