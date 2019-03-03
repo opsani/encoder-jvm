@@ -30,7 +30,7 @@ class IntToStrValueEncoder:
 
     @staticmethod
     def decode(data):
-        return int(data)
+        return int(round(float(data), 0))
 
 
 class IntToPlusMinusValueEncoder:
