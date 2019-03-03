@@ -239,6 +239,16 @@ class UseStringDeduplicationSetting(BooleanSetting):
     default = 0
 
 
+class UnlockExperimentalVMOptionsSetting(BooleanSetting):
+    name = 'UnlockExperimentalVMOptions'
+    default = 0
+
+
+class UseCGroupMemoryLimitForHeapSetting(BooleanSetting):
+    name = 'UseCGroupMemoryLimitForHeap'
+    default = 0
+
+
 class Encoder(BaseEncoder):
 
     def __init__(self, config):
