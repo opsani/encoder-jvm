@@ -85,7 +85,7 @@ class RangeSetting(BaseRangeSetting):
         formatted = sformat.format(name=self.name, value=value, shorthand=self.shorthand)
         return formatted
 
-    def get_first_format_match(self, value):
+    def get_first_match(self, value):
         for format_idx, _ in enumerate(self.formats):
             pattern = r'^{}$'.format(self.format_value('(.*)', format_idx))
             match = re.match(pattern, value)
@@ -111,7 +111,7 @@ class RangeSetting(BaseRangeSetting):
 
     def filter_data(self, data):
         def predicate(option):
-            return bool(self.get_first_format_match(option))
+            return bool(self.get_first_match(option))
 
         return list(filter(predicate, data))
 
@@ -130,7 +130,7 @@ class RangeSetting(BaseRangeSetting):
 
     def decode_option(self, data):
         """
-        Decodes list of primitive values back into single primitive value
+        Decodes list of primitive values back into single primitive value.
 
         :param data: List of multiple primitive values
         :return: Single primitive value
@@ -138,7 +138,7 @@ class RangeSetting(BaseRangeSetting):
         opts = self.validate_data(data)
         if opts:
             opt = opts[0]
-            value = self.get_first_format_match(opt).groups()[0]
+            value = self.get_first_match(opt).groups()[0]
             try:
                 return self.get_value_encoder().decode(value)
             except ValueError as e:
