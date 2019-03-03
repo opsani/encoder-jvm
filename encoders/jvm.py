@@ -26,11 +26,11 @@ class IntToStrValueEncoder:
 
     @staticmethod
     def encode(value):
-        return str(value)
+        return str(int(value))
 
     @staticmethod
     def decode(data):
-        return int(round(float(data), 0))
+        return int(data)
 
 
 class IntToPlusMinusValueEncoder:
@@ -77,10 +77,7 @@ class RangeSetting(BaseRangeSetting):
                                                          q(self.preferred_format)))
 
     def format_value(self, value, format_idx=None):
-        if format_idx is None:
-            idx = self.preferred_format
-        else:
-            idx = format_idx
+        idx = self.preferred_format if format_idx is None else format_idx
         sformat = '-' + self.formats[idx]
         formatted = sformat.format(name=self.name, value=value, shorthand=self.shorthand)
         return formatted
