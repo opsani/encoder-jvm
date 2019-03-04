@@ -20,6 +20,7 @@ def test_describe_list():
         'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'value': 3, 'type': 'range', 'unit': 'GiB'},
         'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'value': 15, 'type': 'range', 'unit': ''}}
 
+
 def test_describe_string():
     config = {'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
                            'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base}
@@ -27,6 +28,7 @@ def test_describe_string():
     assert descriptor == {
         'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'value': 3, 'type': 'range', 'unit': 'GiB'},
         'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'value': 15, 'type': 'range', 'unit': ''}}
+
 
 def test_describe_one_setting():
     config = {'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base}
