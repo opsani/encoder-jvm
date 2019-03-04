@@ -1,5 +1,5 @@
 import pytest
-from encoders.base import encode, describe
+from encoders.base import encode as original_encode, describe as original_describe
 from encoders.jvm import EncoderConfigException, \
     SettingConfigException, \
     SettingRuntimeException
@@ -11,9 +11,21 @@ Describe helper
 config_base = {'name': 'jvm'}
 
 
+def describe(config, data):
+    if isinstance(config, dict):
+        config = {**config, **config_base}
+    return original_describe(config, data)
+
+
+def encode(config, values, expected_type=None):
+    if isinstance(config, dict):
+        config = {**config, **config_base}
+    return original_encode(config, values, expected_type)
+
+
 def test_describe_list():
     config = {'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
-                           'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base}
+                           'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}}
     descriptor = describe(config, ['-XX:MaxHeapSize=3072m',
                                    '-XX:GCTimeRatio=15'])
     assert descriptor == {
@@ -23,7 +35,7 @@ def test_describe_list():
 
 def test_describe_string():
     config = {'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
-                           'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base}
+                           'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}}
     descriptor = describe(config, '-XX:MaxHeapSize=3072m -XX:GCTimeRatio=15')
     assert descriptor == {
         'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'value': 3, 'type': 'range', 'unit': 'GiB'},
@@ -31,13 +43,13 @@ def test_describe_string():
 
 
 def test_describe_one_setting():
-    config = {'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base}
+    config = {'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}}
     descriptor = describe(config, ['-XX:GCTimeRatio=15'])
     assert descriptor == {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'value': 15, 'type': 'range', 'unit': ''}}
 
 
 def test_describe_boolean_setting():
-    config = {'settings': {'AlwaysPreTouch': None}, **config_base}
+    config = {'settings': {'AlwaysPreTouch': None}}
     descriptor = describe(config, ['-XX:AlwaysPreTouch'])
     assert descriptor == {'AlwaysPreTouch': {'min': 0, 'max': 1, 'step': 1, 'value': 1,
                                              'type': 'range', 'unit': ''}}
@@ -51,7 +63,7 @@ def test_describe_boolean_setting():
 
 def test_describe_one_setting_defaults():
     config = {'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
-                           'GCTimeRatio': None}, **config_base}
+                           'GCTimeRatio': None}}
     descriptor = describe(config, ['-XX:MaxHeapSize=3072m',
                                    '-XX:GCTimeRatio=15'])
     assert descriptor == {
@@ -61,7 +73,7 @@ def test_describe_one_setting_defaults():
 
 def test_describe_no_current_value_with_default():
     config = {'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'default': 3},
-                           'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'default': 15}}, **config_base}
+                           'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'default': 15}}}
     descriptor = describe(config, [])
     assert descriptor == {
         'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'value': 3, 'type': 'range', 'unit': 'GiB'},
@@ -70,7 +82,7 @@ def test_describe_no_current_value_with_default():
 
 def test_describe_unsupported_options_provided():
     config = {'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
-                           'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base}
+                           'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}}
     descriptor = describe(config, ['java', '-server',
 
                                    '-XX:MaxHeapSize=5120m',
@@ -83,7 +95,7 @@ def test_describe_unsupported_options_provided():
 
 
 def test_describe_multiple_option_formats_provided():
-    config = {'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}, **config_base}
+    config = {'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}}
     with pytest.raises(SettingRuntimeException):
         describe(config, ['-XX:MaxHeapSize=5120m', '-Xmx4096m'])
 
@@ -99,29 +111,29 @@ def test_describe_no_settings_provided():
 
 def test_describe_no_current_value_without_default():
     with pytest.raises(SettingRuntimeException):
-        describe({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}, **config_base}, [])
+        describe({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}}, [])
 
     with pytest.raises(SettingRuntimeException):
-        describe({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base}, [])
+        describe({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}}, [])
 
 
 def test_describe_wrong_value_format():
     with pytest.raises(SettingRuntimeException):
-        describe({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}, **config_base},
+        describe({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}},
                  ['-XX:MaxHeapSize=5.2g'])
 
     with pytest.raises(SettingRuntimeException):
-        describe({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base},
+        describe({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}},
                  ['-XX:GCTimeRatio=None'])
 
 
 def test_describe_multiple_settings_provided():
     with pytest.raises(SettingRuntimeException):
-        describe({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}, **config_base},
+        describe({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}},
                  ['-XX:MaxHeapSize=5120m', '-XX:MaxHeapSize=6144m'])
 
     with pytest.raises(SettingRuntimeException):
-        describe({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base},
+        describe({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}},
                  ['-XX:GCTimeRatio=50', '-XX:GCTimeRatio=60'])
 
 
@@ -132,7 +144,7 @@ def test_describe_wrong_config_type_provided():
 
 def test_describe_unsupported_setting_requested():
     with pytest.raises(EncoderConfigException):
-        describe({'settings': {'MortgageAPR': {}}, **config_base}, [])
+        describe({'settings': {'MortgageAPR': {}}}, [])
 
 
 """
@@ -143,7 +155,7 @@ Encode helper
 def test_encode():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
                                       'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}},
-                         'expected_type': 'list', **config_base},
+                         'expected_type': 'list'},
                         {'MaxHeapSize': {'value': 4},
                          'GCTimeRatio': {'value': 59}})
     assert sorted(encoded) == sorted(['-XX:MaxHeapSize=4096m',
@@ -152,7 +164,7 @@ def test_encode():
 
 def test_encode_one_setting():
     encoded, _ = encode({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}},
-                         'expected_type': 'list', **config_base},
+                         'expected_type': 'list'},
                         {'GCTimeRatio': {'value': 59}})
     assert sorted(encoded) == sorted(['-XX:GCTimeRatio=59'])
 
@@ -160,7 +172,7 @@ def test_encode_one_setting():
 def test_encode_one_setting_defaults():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
                                       'GCTimeRatio': None},
-                         'expected_type': 'list', **config_base},
+                         'expected_type': 'list'},
                         {'MaxHeapSize': {'value': 4},
                          'GCTimeRatio': {'value': 59}})
     assert sorted(encoded) == sorted(['-XX:MaxHeapSize=4096m',
@@ -171,7 +183,7 @@ def test_encode_before_after_persist():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
                          'before': ['java', '-server'],
                          'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'],
-                         'expected_type': 'list', **config_base},
+                         'expected_type': 'list'},
                         {'MaxHeapSize': {'value': 4}})
     assert encoded == ['java', '-server',
                        '-XX:MaxHeapSize=4096m',
@@ -182,7 +194,7 @@ def test_encode_expected_type_from_config():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
                          'before': ['java', '-server'],
                          'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'],
-                         'expected_type': 'str', **config_base},
+                         'expected_type': 'str'},
                         {'MaxHeapSize': {'value': 4}})
     assert encoded == 'java -server -XX:MaxHeapSize=4096m -javaagent:/tmp/newrelic/newrelic.jar -jar /app.jar'
 
@@ -190,7 +202,7 @@ def test_encode_expected_type_from_config():
 def test_encode_expected_type_string():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
                          'before': ['java', '-server'],
-                         'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'], **config_base},
+                         'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar']},
                         {'MaxHeapSize': {'value': 4}},
                         expected_type='str')
     assert encoded == 'java -server -XX:MaxHeapSize=4096m -javaagent:/tmp/newrelic/newrelic.jar -jar /app.jar'
@@ -199,7 +211,7 @@ def test_encode_expected_type_string():
 def test_encode_expected_type_list():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
                          'before': ['java', '-server'],
-                         'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'], **config_base},
+                         'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar']},
                         {'MaxHeapSize': {'value': 4}},
                         expected_type='list')
     assert encoded == ['java', '-server',
@@ -207,7 +219,7 @@ def test_encode_expected_type_list():
                        '-jar', '/app.jar']
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
                          'before': ['java', '-server'],
-                         'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'], **config_base},
+                         'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar']},
                         {'MaxHeapSize': {'value': 4}},
                         expected_type=list)
     assert encoded == ['java', '-server',
@@ -218,7 +230,7 @@ def test_encode_expected_type_list():
 def test_encode_default_expected_type_string():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
                          'before': ['java', '-server'],
-                         'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'], **config_base},
+                         'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar']},
                         {'MaxHeapSize': {'value': 4}})
     assert encoded == 'java -server -XX:MaxHeapSize=4096m -javaagent:/tmp/newrelic/newrelic.jar -jar /app.jar'
 
@@ -228,7 +240,7 @@ def test_encode_expected_type_provided_in_encode_and_config():
         encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
                 'before': ['java', '-server'],
                 'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'],
-                'expected_type': 'str', **config_base},
+                'expected_type': 'str'},
                {'MaxHeapSize': {'value': 4}},
                expected_type='list')
 
@@ -237,99 +249,99 @@ def test_encode_unsupported_expected_type():
     with pytest.raises(EncoderConfigException):
         encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}},
                 'before': ['java', '-server'],
-                'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'], **config_base},
+                'after': ['-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar']},
                {'MaxHeapSize': {'value': 4}},
                expected_type=dict)
 
 
 def test_encode_value_conversion():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': .125}},
-                         'expected_type': 'list', **config_base},
+                         'expected_type': 'list'},
                         {'MaxHeapSize': {'value': 1.625}})
     assert encoded == ['-XX:MaxHeapSize=1664m']
 
 
 def test_encode_boolean_setting():
-    encoded, _ = encode({'settings': {'AlwaysPreTouch': None}, 'expected_type': 'list', **config_base},
+    encoded, _ = encode({'settings': {'AlwaysPreTouch': None}, 'expected_type': 'list'},
                         {'AlwaysPreTouch': {'value': 1}})
     assert encoded == ['-XX:+AlwaysPreTouch']
-    encoded, _ = encode({'settings': {'AlwaysPreTouch': None}, 'expected_type': 'list', **config_base},
+    encoded, _ = encode({'settings': {'AlwaysPreTouch': None}, 'expected_type': 'list'},
                         {'AlwaysPreTouch': {'value': 0}})
     assert encoded == ['-XX:-AlwaysPreTouch']
 
 
 def test_encode_freezed_setting_reconfigure():
     with pytest.raises(SettingConfigException):
-        encode({'settings': {'AlwaysPreTouch': {'max': 2}}, **config_base},
+        encode({'settings': {'AlwaysPreTouch': {'max': 2}}},
                {'AlwaysPreTouch': {'value': 2}})
 
 
 def test_encode_no_values_provided():
     with pytest.raises(SettingRuntimeException):
-        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}, **config_base},
+        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}},
                {})
 
     with pytest.raises(SettingRuntimeException):
-        encode({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}, **config_base},
+        encode({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}},
                {})
 
 
 def test_encode_invalid_type_value_provided():
     with pytest.raises(SettingRuntimeException):
-        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}, **config_base},
+        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}},
                {'MaxHeapSize': {'value': '1'}})
 
 
 def test_encode_setting_wrong_configuration_type():
     with pytest.raises(SettingConfigException):
-        encode({'settings': {'MaxHeapSize': 5}, **config_base}, {'MaxHeapSize': {'value': 2}})
+        encode({'settings': {'MaxHeapSize': 5}}, {'MaxHeapSize': {'value': 2}})
 
 
 def test_encode_setting_unsupported_option():
     with pytest.raises(SettingConfigException):
-        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'magic_wand': True}}, **config_base},
+        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'magic_wand': True}}},
                {'MaxHeapSize': {'value': 2}})
 
 
 def test_encode_range_setting_value_validation():
     with pytest.raises(SettingConfigException):
-        encode({'settings': {'MaxHeapSize': {'min': None, 'max': 6, 'step': 1}}, **config_base},
+        encode({'settings': {'MaxHeapSize': {'min': None, 'max': 6, 'step': 1}}},
                {'MaxHeapSize': {'value': 2}})
 
     with pytest.raises(SettingConfigException):
-        encode({'settings': {'MaxHeapSize': {'min': 1, 'step': 1}}, **config_base},
+        encode({'settings': {'MaxHeapSize': {'min': 1, 'step': 1}}},
                {'MaxHeapSize': {'value': 2}})
 
     with pytest.raises(SettingConfigException):
-        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': None}}, **config_base},
+        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': None}}},
                {'MaxHeapSize': {'value': 2}})
 
     with pytest.raises(SettingConfigException):
-        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 0}}, **config_base},
+        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 0}}},
                {'MaxHeapSize': {'value': 2}})
 
     with pytest.raises(SettingConfigException):
-        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': -1}}, **config_base},
+        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': -1}}},
                {'MaxHeapSize': {'value': 6}})
 
     with pytest.raises(SettingConfigException):
-        encode({'settings': {'MaxHeapSize': {'min': 6, 'max': 1, 'step': 1}}, **config_base},
+        encode({'settings': {'MaxHeapSize': {'min': 6, 'max': 1, 'step': 1}}},
                {'MaxHeapSize': {'value': 2}})
 
     with pytest.raises(SettingConfigException):
-        encode({'settings': {'GCTimeRatio': {'min': 10, 'max': 90, 'step': 9}}, **config_base},
+        encode({'settings': {'GCTimeRatio': {'min': 10, 'max': 90, 'step': 9}}},
                {'GCTimeRatio': {'value': 10}})
 
     with pytest.raises(SettingRuntimeException):
-        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}, **config_base},
+        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}},
                {'MaxHeapSize': {'value': 2.5}})
 
     with pytest.raises(SettingRuntimeException):
-        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}, **config_base},
+        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}},
                {'MaxHeapSize': {'value': 0}})
 
     with pytest.raises(SettingRuntimeException):
-        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}, **config_base},
+        encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}},
                {'MaxHeapSize': {'value': 7}})
 
 
@@ -341,8 +353,7 @@ def test_describe_gc_type():
     for disable_others in (True, False):
         for index, current_gc in enumerate(gc_types):
             template = '-XX:{}Use{}'
-            config = {'settings': {'GCType': {'values': gc_types, 'default': 'G1GC', 'disable_others': disable_others}},
-                      **config_base}
+            config = {'settings': {'GCType': {'values': gc_types, 'default': 'G1GC', 'disable_others': disable_others}}}
             if disable_others:
                 input_data = list(template.format('+' if current_gc == gc else '-', gc) for gc in gc_types)
             else:
@@ -355,41 +366,38 @@ def test_describe_gc_type():
 def test_describe_gc_type_default_value_provided():
     # Test default value
     config = {'settings': {'GCType': {'values': ('G1GC', 'ConcMarkSweepGC', 'ParNewGC', 'ParallelOldGC'),
-                                      'default': 'ParNewGC'}}, **config_base}
+                                      'default': 'ParNewGC'}}}
     descriptor = describe(config, [])
     assert descriptor == {'GCType': {'min': 0, 'max': 3, 'step': 1, 'value': 2, 'type': 'range', 'unit': ''}}
 
 
 def test_describe_gc_type_no_default_value_provided():
-    config = {'settings': {'GCType': {'values': ['G1GC', 'ConcMarkSweepGC', 'ParNewGC', 'ParallelOldGC']}},
-              **config_base}
+    config = {'settings': {'GCType': {'values': ['G1GC', 'ConcMarkSweepGC', 'ParNewGC', 'ParallelOldGC']}}}
     with pytest.raises(SettingRuntimeException):
         describe(config, [])
 
 
 def test_describe_gc_type_wrong_default_value_provided():
     config = {'settings': {'GCType': {'values': ['G1GC', 'ConcMarkSweepGC', 'ParNewGC', 'ParallelOldGC'],
-                                      'default': 'WoodooMagicGC'}},
-              **config_base}
+                                      'default': 'WoodooMagicGC'}}}
     with pytest.raises(SettingConfigException):
         describe(config, [])
 
 
 def test_describe_gc_type_multiple_enabled():
-    config = {'settings': {'GCType': {'values': ['G1GC', 'ConcMarkSweepGC', 'ParNewGC', 'ParallelOldGC']}},
-              **config_base}
+    config = {'settings': {'GCType': {'values': ['G1GC', 'ConcMarkSweepGC', 'ParNewGC', 'ParallelOldGC']}}}
     with pytest.raises(SettingRuntimeException):
         describe(config, ['-XX:+UseParNewGC', '-XX:+UseConcMarkSweepGC'])
 
 
 def test_describe_gc_type_no_values_provided():
     with pytest.raises(SettingConfigException):
-        describe({'settings': {'GCType': {'values': []}}, **config_base}, [])
+        describe({'settings': {'GCType': {'values': []}}}, [])
 
 
 def test_describe_gc_type_wrong_type_value_set_provided():
     with pytest.raises(SettingConfigException):
-        describe({'settings': {'GCType': {'values': 'hello, world!'}}, **config_base}, [])
+        describe({'settings': {'GCType': {'values': 'hello, world!'}}}, [])
 
 
 def test_encode_gc_type():
@@ -399,8 +407,7 @@ def test_encode_gc_type():
     for disable_others in (True, False):
         for index, current_gc in enumerate(gc_types):
             template = '-XX:{}Use{}'
-            config = {'settings': {'GCType': {'values': gc_types, 'disable_others': disable_others}},
-                      **config_base}
+            config = {'settings': {'GCType': {'values': gc_types, 'disable_others': disable_others}}}
             if disable_others:
                 expected = list(template.format('+' if current_gc == gc else '-', gc) for gc in gc_types)
             else:
