@@ -329,3 +329,70 @@ def test_encode_range_setting_value_validation():
     with pytest.raises(SettingRuntimeException):
         encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}, **config_base},
                {'MaxHeapSize': {'value': 7}})
+
+
+# GC Type
+def test_describe_gc_type():
+    gc_types = ('G1GC', 'ConcMarkSweepGC', 'ParNewGC', 'ParallelOldGC')
+
+    # Test all the available GCs with and without disabling other types
+    for disable_others in (True, False):
+        for index, current_gc in enumerate(gc_types):
+            tmplt = '-XX:{}Use{}'
+            config = {'settings': {'GCType': {'values': gc_types, 'default': 'G1GC', 'disable_others': disable_others}},
+                      **config_base}
+            if disable_others:
+                input_data = list(tmplt.format('+' if current_gc == gc else '-', gc) for gc in gc_types)
+            else:
+                input_data = [tmplt.format('+', current_gc)]
+            descriptor = describe(config, input_data)
+            assert descriptor == {'GCType': {'min': 0, 'max': 3, 'step': 1, 'value': index,
+                                             'type': 'range', 'unit': ''}}
+
+
+def test_describe_gc_type_default_value_provided():
+    # Test default value
+    config = {'settings': {'GCType': {'values': ('G1GC', 'ConcMarkSweepGC', 'ParNewGC', 'ParallelOldGC'),
+                                      'default': 'ParNewGC'}}, **config_base}
+    descriptor = describe(config, [])
+    assert descriptor == {'GCType': {'min': 0, 'max': 3, 'step': 1, 'value': 2, 'type': 'range', 'unit': ''}}
+
+
+def test_describe_gc_type_no_default_value_provided():
+    config = {'settings': {'GCType': {'values': ['G1GC', 'ConcMarkSweepGC', 'ParNewGC', 'ParallelOldGC']}},
+              **config_base}
+    describe(config, [])
+
+
+def test_describe_gc_type_multiple_enabled():
+    config = {'settings': {'GCType': {'values': ['G1GC', 'ConcMarkSweepGC', 'ParNewGC', 'ParallelOldGC']}},
+              **config_base}
+    with pytest.raises(SettingRuntimeException):
+        describe(config, ['-XX:+UseParNewGC', '-XX:+UseConcMarkSweepGC'])
+
+
+def test_describe_gc_type_no_values_provided():
+    with pytest.raises(SettingConfigException):
+        describe({'settings': {'GCType': {'values': []}}, **config_base}, [])
+
+
+def test_describe_gc_type_wrong_type_value_set_provided():
+    with pytest.raises(SettingConfigException):
+        describe({'settings': {'GCType': {'values': 'hello, world!'}}, **config_base}, [])
+
+
+def test_encode_gc_type():
+    gc_types = ('G1GC', 'ConcMarkSweepGC', 'ParNewGC', 'ParallelOldGC')
+
+    # Test all the available GCs with and without disabling other types
+    for disable_others in (True, False):
+        for index, current_gc in enumerate(gc_types):
+            tmplt = '-XX:{}Use{}'
+            config = {'settings': {'GCType': {'values': gc_types, 'disable_others': disable_others}},
+                      **config_base}
+            if disable_others:
+                expected = list(tmplt.format('+' if current_gc == gc else '-', gc) for gc in gc_types)
+            else:
+                expected = [tmplt.format('+', current_gc)]
+            encoded, _ = encode(config, {'GCType': {'value': index}}, list)
+            assert encoded == expected

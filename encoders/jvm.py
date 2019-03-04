@@ -189,6 +189,73 @@ class GCTimeRatioSetting(RangeSetting):
     relaxable = False
 
 
+class GCTypeSetting(BaseRangeSetting):
+    name = 'GCType'
+    freeze_range = True
+    min = 0
+    max = 0
+    step = 1
+    values = ('ParNewGC', 'G1GC', 'ParallelOldGC', 'ConcMarkSweepGC')
+    disable_others = False
+
+    def __init__(self, config=None):
+        self.allowed_options.update({'values', 'disable_others'})
+        super().__init__(config)
+        if self.config.get('values'):
+            self.values = self.config.get('values')
+        self.max = len(self.values) - 1
+
+        disable_others = self.config.get('disable_others')
+        if disable_others is not None:
+            self.disable_others = disable_others
+
+        self.settings = []
+        for value in self.values:
+            class Setting(BooleanSetting):
+                name = 'Use{}'.format(value)
+                default = 0
+
+            setting = Setting()
+            self.settings.append(setting)
+
+    def check_config(self):
+        super().check_config()
+        values = self.config.get('values')
+        if values is not None:
+            if not isinstance(values, (list, tuple)):
+                raise SettingConfigException('Provided set of values must be a list or a tuple in setting GCType. '
+                                             'Found: {}'.format(values))
+            if len(values) == 0:
+                raise SettingConfigException('No values has been provided for setting GCType.')
+
+    def encode_option(self, value):
+        value = self.validate_value(value)
+        encoded = []
+        for index, val in enumerate(self.values):
+            if value == index:
+                encoded.append('-XX:+Use' + val)
+            elif self.disable_others:
+                encoded.append('-XX:-Use' + val)
+        return encoded
+
+    def validate_data(self, data):
+        decoded_values = tuple(setting.decode_option(data) for setting in self.settings)
+
+        if sum(decoded_values) > 1:
+            raise SettingRuntimeException('There is more than 1 active GC in the input data for setting GCType.')
+
+        return decoded_values
+
+    def decode_option(self, data):
+        decoded_values = self.validate_data(data)
+
+        if any(decoded_values):
+            return decoded_values.index(1)
+
+        if self.default is not None:
+            return self.values.index(self.default)
+
+
 # Boolean settings
 class CMSParallelRemarkEnabledSetting(BooleanSetting):
     name = 'CMSParallelRemarkEnabled'
