@@ -203,6 +203,12 @@ class GCTypeSetting(BaseRangeSetting):
         super().__init__(config)
         if self.config.get('values'):
             self.values = self.config.get('values')
+
+        if self.default is not None and self.default not in self.values:
+            raise SettingConfigException(
+                'Default value for setting GCType was not found in the defined list of values. '
+                'Found {}. Supported: {}'.format(q(self.default), self.values))
+
         self.max = len(self.values) - 1
 
         disable_others = self.config.get('disable_others')

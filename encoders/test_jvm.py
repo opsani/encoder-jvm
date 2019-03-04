@@ -366,6 +366,14 @@ def test_describe_gc_type_no_default_value_provided():
     describe(config, [])
 
 
+def test_describe_gc_type_wrong_default_value_provided():
+    config = {'settings': {'GCType': {'values': ['G1GC', 'ConcMarkSweepGC', 'ParNewGC', 'ParallelOldGC'],
+                                      'default': 'WoodooMagicGC'}},
+              **config_base}
+    with pytest.raises(SettingConfigException):
+        describe(config, [])
+
+
 def test_describe_gc_type_multiple_enabled():
     config = {'settings': {'GCType': {'values': ['G1GC', 'ConcMarkSweepGC', 'ParNewGC', 'ParallelOldGC']}},
               **config_base}
