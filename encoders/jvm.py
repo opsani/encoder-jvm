@@ -53,7 +53,7 @@ class RangeSetting(BaseRangeSetting):
     shorthand = None
     preferred_format = 0
 
-    def __init__(self, config):
+    def __init__(self, config=None):
         super().__init__(config)
         if self.value_encoder is None:
             raise NotImplementedError('You must provide value encoder for setting {} '
