@@ -363,7 +363,8 @@ def test_describe_gc_type_default_value_provided():
 def test_describe_gc_type_no_default_value_provided():
     config = {'settings': {'GCType': {'values': ['G1GC', 'ConcMarkSweepGC', 'ParNewGC', 'ParallelOldGC']}},
               **config_base}
-    describe(config, [])
+    with pytest.raises(SettingRuntimeException):
+        describe(config, [])
 
 
 def test_describe_gc_type_wrong_default_value_provided():

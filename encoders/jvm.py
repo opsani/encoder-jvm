@@ -250,6 +250,10 @@ class GCTypeSetting(BaseRangeSetting):
         if sum(decoded_values) > 1:
             raise SettingRuntimeException('There is more than 1 active GC in the input data for setting GCType.')
 
+        if not any(decoded_values) and self.default is None:
+            raise SettingRuntimeException('No value found to decode for setting GCType and no '
+                                          'default value was configured.'.format(q(self.name)))
+
         return decoded_values
 
     def decode_option(self, data):
