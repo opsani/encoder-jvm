@@ -77,12 +77,12 @@ class RangeSetting(BaseRangeSetting):
                                                          q(self.preferred_format)))
 
     def format_value(self, value, format_idx=None):
-        idx = self.preferred_format if format_idx is None else format_idx
-        sformat = '-' + self.formats[idx]
-        formatted = sformat.format(name=self.name, value=value, shorthand=self.shorthand)
+        index = self.preferred_format if format_idx is None else format_idx
+        template = '-' + self.formats[index]
+        formatted = template.format(name=self.name, value=value, shorthand=self.shorthand)
         return formatted
 
-    def get_first_match(self, value):
+    def get_format_match(self, value):
         for format_idx, _ in enumerate(self.formats):
             pattern = r'^{}$'.format(self.format_value('(.*)', format_idx))
             match = re.match(pattern, value)
@@ -108,7 +108,7 @@ class RangeSetting(BaseRangeSetting):
 
     def filter_data(self, data):
         def predicate(option):
-            return bool(self.get_first_match(option))
+            return bool(self.get_format_match(option))
 
         return list(filter(predicate, data))
 
@@ -135,7 +135,7 @@ class RangeSetting(BaseRangeSetting):
         opts = self.validate_data(data)
         if opts:
             opt = opts[0]
-            value = self.get_first_match(opt).groups()[0]
+            value = self.get_format_match(opt).groups()[0]
             try:
                 return self.get_value_encoder().decode(value)
             except ValueError as e:
