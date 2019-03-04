@@ -1,6 +1,6 @@
 import pytest
 from encoders.base import encode, describe
-from encoders.jvm import Encoder, EncoderConfigException, \
+from encoders.jvm import EncoderConfigException, \
     SettingConfigException, \
     SettingRuntimeException
 
