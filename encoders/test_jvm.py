@@ -340,13 +340,13 @@ def test_describe_gc_type():
     # Test all the available GCs with and without disabling other types
     for disable_others in (True, False):
         for index, current_gc in enumerate(gc_types):
-            tmplt = '-XX:{}Use{}'
+            template = '-XX:{}Use{}'
             config = {'settings': {'GCType': {'values': gc_types, 'default': 'G1GC', 'disable_others': disable_others}},
                       **config_base}
             if disable_others:
-                input_data = list(tmplt.format('+' if current_gc == gc else '-', gc) for gc in gc_types)
+                input_data = list(template.format('+' if current_gc == gc else '-', gc) for gc in gc_types)
             else:
-                input_data = [tmplt.format('+', current_gc)]
+                input_data = [template.format('+', current_gc)]
             descriptor = describe(config, input_data)
             assert descriptor == {'GCType': {'min': 0, 'max': 3, 'step': 1, 'value': index,
                                              'type': 'range', 'unit': ''}}
@@ -389,12 +389,12 @@ def test_encode_gc_type():
     # Test all the available GCs with and without disabling other types
     for disable_others in (True, False):
         for index, current_gc in enumerate(gc_types):
-            tmplt = '-XX:{}Use{}'
+            template = '-XX:{}Use{}'
             config = {'settings': {'GCType': {'values': gc_types, 'disable_others': disable_others}},
                       **config_base}
             if disable_others:
-                expected = list(tmplt.format('+' if current_gc == gc else '-', gc) for gc in gc_types)
+                expected = list(template.format('+' if current_gc == gc else '-', gc) for gc in gc_types)
             else:
-                expected = [tmplt.format('+', current_gc)]
+                expected = [template.format('+', current_gc)]
             encoded, _ = encode(config, {'GCType': {'value': index}}, list)
             assert encoded == expected
