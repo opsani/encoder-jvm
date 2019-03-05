@@ -176,7 +176,7 @@ class InitialEdenHeapSizeSetting(HeapSizeSetting):
     name = 'InitialEdenHeapSize'
     formats = ('X{shorthand}{value}', 'X{shorthand}:{value}')
     shorthand = 'mn'
-    min = .625 / 1024
+    min = 32 / 1024
     step = 32 / 1024
 
 
@@ -185,7 +185,7 @@ class GCTimeRatioSetting(RangeSetting):
     name = 'GCTimeRatio'
     min = 9
     max = 99
-    step = 1
+    step = 10
     relaxable = False
 
 
