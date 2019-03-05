@@ -220,8 +220,9 @@ class GCTypeSetting(BaseRangeSetting):
         self.settings = []
         for value in self.values:
             class Setting(BooleanSetting):
-                name = 'Use{}'.format(value)
+                name = value
                 default = 0
+                formats = ('XX:{value}Use{name}',)
 
             setting = Setting()
             self.settings.append(setting)
@@ -246,6 +247,10 @@ class GCTypeSetting(BaseRangeSetting):
             if unrecognized_values:
                 raise SettingConfigException('Provided set of values in setting GCType contains those '
                                              'it does not support: {}'.format(', '.join(unrecognized_values)))
+        default = self.config.get('default')
+        if default is not None and default not in self.supported_values:
+            raise SettingConfigException('Provided default value in setting GCType is not allowed. '
+                                         'Found {}. Supported {}.'.format(default, ', '.join(self.supported_values)))
 
     def encode_option(self, value):
         value = self.validate_value(value)
@@ -260,12 +265,12 @@ class GCTypeSetting(BaseRangeSetting):
         return encoded
 
     def validate_data(self, data):
-        decoded_values = tuple(setting.decode_option(data) for setting in self.settings)
+        decoded_values = {setting.name: setting.decode_option(data) for setting in self.settings}
 
-        if sum(decoded_values) > 1:
+        if sum(decoded_values.values()) > 1:
             raise SettingRuntimeException('There is more than 1 active GC in the input data for setting GCType.')
 
-        if not any(decoded_values) and self.default is None:
+        if not any(decoded_values.values()) and self.default is None:
             raise SettingRuntimeException('No value found to decode for setting GCType and no '
                                           'default value was configured.'.format(q(self.name)))
 
@@ -274,11 +279,11 @@ class GCTypeSetting(BaseRangeSetting):
     def decode_option(self, data):
         decoded_values = self.validate_data(data)
 
-        if any(decoded_values):
-            return decoded_values.index(1)
+        if any(decoded_values.values()):
+            value = list(filter(lambda i: i[1] == 1, decoded_values.items()))[0][0]
+            return value
 
-        if self.default is not None:
-            return self.values.index(self.default)
+        return self.default
 
 
 # Boolean settings

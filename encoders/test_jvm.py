@@ -353,17 +353,17 @@ def test_describe_gc_type():
 
     # Test all the available GCs with and without disabling other types
     for disable_others in (True, False):
-        for index, current_gc in enumerate(selected_gcs):
+        for current_gc in selected_gcs:
             input_data = []
             if disable_others:
                 disabled_gcs = supported_gcs - set(selected_gcs)
                 for gc in disabled_gcs:
                     input_data.append(template.format('-', gc))
             input_data.append(template.format('+', current_gc))
-            config = {'settings': {'GCType': {'values': selected_gcs, 'default': 'G1GC',
+            config = {'settings': {'GCType': {'values': selected_gcs,
                                               'disable_others': disable_others}}}
             descriptor = describe(config, input_data)
-            assert descriptor == {'GCType': {'value': index, 'type': 'enum', 'unit': ''}}
+            assert descriptor == {'GCType': {'value': current_gc, 'type': 'enum', 'unit': ''}}
 
 
 def test_describe_gc_type_default_value_provided():
@@ -371,7 +371,7 @@ def test_describe_gc_type_default_value_provided():
     config = {'settings': {'GCType': {'values': ('G1GC', 'ConcMarkSweepGC', 'ParNewGC', 'ParallelOldGC'),
                                       'default': 'ParNewGC'}}}
     descriptor = describe(config, [])
-    assert descriptor == {'GCType': {'value': 2, 'type': 'enum', 'unit': ''}}
+    assert descriptor == {'GCType': {'value': 'ParNewGC', 'type': 'enum', 'unit': ''}}
 
 
 def test_describe_gc_type_no_default_value_provided():
