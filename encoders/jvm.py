@@ -191,11 +191,13 @@ class GCTimeRatioSetting(RangeSetting):
 
 class GCTypeSetting(BaseRangeSetting):
     name = 'GCType'
+    type = 'enum'
     freeze_range = True
     min = 0
     max = 0
     step = 1
-    values = ('ParNewGC', 'G1GC', 'ParallelOldGC', 'ConcMarkSweepGC')
+    supported_values = ('ParNewGC', 'G1GC', 'ParallelOldGC', 'ConcMarkSweepGC', 'SerialGC')
+    values = supported_values
     disable_others = False
 
     def __init__(self, config=None):
@@ -224,6 +226,13 @@ class GCTypeSetting(BaseRangeSetting):
             setting = Setting()
             self.settings.append(setting)
 
+    def describe(self):
+        name, descr = super().describe()
+        del descr['min']
+        del descr['max']
+        del descr['step']
+        return name, descr
+
     def check_config(self):
         super().check_config()
         values = self.config.get('values')
@@ -233,15 +242,21 @@ class GCTypeSetting(BaseRangeSetting):
                                              'Found: {}'.format(values))
             if len(values) == 0:
                 raise SettingConfigException('No values has been provided for setting GCType.')
+            unrecognized_values = set(values) - set(self.supported_values)
+            if unrecognized_values:
+                raise SettingConfigException('Provided set of values in setting GCType contains those '
+                                             'it does not support: {}'.format(', '.join(unrecognized_values)))
 
     def encode_option(self, value):
         value = self.validate_value(value)
+        value_index = value
+        current_value = self.values[value_index]
         encoded = []
-        for index, val in enumerate(self.values):
-            if value == index:
-                encoded.append('-XX:+Use' + val)
-            elif self.disable_others:
-                encoded.append('-XX:-Use' + val)
+        if self.disable_others:
+            disabled_gcs = set(self.supported_values) - {current_value}
+            for gc in sorted(disabled_gcs):
+                encoded.append('-XX:-Use{}'.format(gc))
+        encoded.append('-XX:+Use{}'.format(current_value))
         return encoded
 
     def validate_data(self, data):
