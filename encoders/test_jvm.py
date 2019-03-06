@@ -25,27 +25,27 @@ def encode(config, values, expected_type=None):
 
 def test_describe_list():
     config = {'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
-                           'GCTimeRatio': {'min': 9, 'max': 99, 'step': 10}}}
+                           'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}}
     descriptor = describe(config, ['-XX:MaxHeapSize=3072m',
                                    '-XX:GCTimeRatio=19'])
     assert descriptor == {
         'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'value': 3, 'type': 'range', 'unit': 'GiB'},
-        'GCTimeRatio': {'min': 9, 'max': 99, 'step': 10, 'value': 19, 'type': 'range', 'unit': ''}}
+        'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'value': 19, 'type': 'range', 'unit': ''}}
 
 
 def test_describe_string():
     config = {'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
-                           'GCTimeRatio': {'min': 9, 'max': 99, 'step': 10}}}
+                           'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}}
     descriptor = describe(config, '-XX:MaxHeapSize=3072m -XX:GCTimeRatio=19')
     assert descriptor == {
         'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'value': 3, 'type': 'range', 'unit': 'GiB'},
-        'GCTimeRatio': {'min': 9, 'max': 99, 'step': 10, 'value': 19, 'type': 'range', 'unit': ''}}
+        'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'value': 19, 'type': 'range', 'unit': ''}}
 
 
 def test_describe_one_setting():
-    config = {'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 10}}}
+    config = {'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}}
     descriptor = describe(config, ['-XX:GCTimeRatio=19'])
-    assert descriptor == {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 10, 'value': 19, 'type': 'range', 'unit': ''}}
+    assert descriptor == {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'value': 19, 'type': 'range', 'unit': ''}}
 
 
 def test_describe_boolean_setting():
@@ -68,21 +68,21 @@ def test_describe_one_setting_defaults():
                                    '-XX:GCTimeRatio=19'])
     assert descriptor == {
         'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'value': 3, 'type': 'range', 'unit': 'GiB'},
-        'GCTimeRatio': {'min': 9, 'max': 99, 'step': 10, 'value': 19, 'type': 'range', 'unit': ''}}
+        'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'value': 19, 'type': 'range', 'unit': ''}}
 
 
 def test_describe_no_current_value_with_default():
     config = {'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'default': 3},
-                           'GCTimeRatio': {'min': 9, 'max': 99, 'step': 10, 'default': 19}}}
+                           'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'default': 19}}}
     descriptor = describe(config, [])
     assert descriptor == {
         'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'value': 3, 'type': 'range', 'unit': 'GiB'},
-        'GCTimeRatio': {'min': 9, 'max': 99, 'step': 10, 'value': 19, 'type': 'range', 'unit': ''}}
+        'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'value': 19, 'type': 'range', 'unit': ''}}
 
 
 def test_describe_unsupported_options_provided():
     config = {'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
-                           'GCTimeRatio': {'min': 9, 'max': 99, 'step': 10}}}
+                           'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}}
     descriptor = describe(config, ['java', '-server',
 
                                    '-XX:MaxHeapSize=5120m',
@@ -91,7 +91,7 @@ def test_describe_unsupported_options_provided():
                                    '-javaagent:/tmp/newrelic/newrelic.jar', '-jar', '/app.jar'])
     assert descriptor == {
         'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1, 'value': 5, 'type': 'range', 'unit': 'GiB'},
-        'GCTimeRatio': {'min': 9, 'max': 99, 'step': 10, 'value': 50, 'type': 'range', 'unit': ''}}
+        'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1, 'value': 50, 'type': 'range', 'unit': ''}}
 
 
 def test_describe_multiple_option_formats_provided():
@@ -114,7 +114,7 @@ def test_describe_no_current_value_without_default():
         describe({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1}}}, [])
 
     with pytest.raises(SettingRuntimeException):
-        describe({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 10}}}, [])
+        describe({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}}, [])
 
 
 def test_describe_wrong_value_format():
@@ -123,7 +123,7 @@ def test_describe_wrong_value_format():
                  ['-XX:MaxHeapSize=5.2g'])
 
     with pytest.raises(SettingRuntimeException):
-        describe({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 10}}},
+        describe({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}},
                  ['-XX:GCTimeRatio=None'])
 
 
@@ -133,7 +133,7 @@ def test_describe_multiple_settings_provided():
                  ['-XX:MaxHeapSize=5120m', '-XX:MaxHeapSize=6144m'])
 
     with pytest.raises(SettingRuntimeException):
-        describe({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 10}}},
+        describe({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}},
                  ['-XX:GCTimeRatio=50', '-XX:GCTimeRatio=60'])
 
 
@@ -154,7 +154,7 @@ Encode helper
 
 def test_encode():
     encoded, _ = encode({'settings': {'MaxHeapSize': {'min': 1, 'max': 6, 'step': 1},
-                                      'GCTimeRatio': {'min': 9, 'max': 99, 'step': 10}},
+                                      'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}},
                          'expected_type': 'list'},
                         {'MaxHeapSize': {'value': 4},
                          'GCTimeRatio': {'value': 59}})
@@ -163,7 +163,7 @@ def test_encode():
 
 
 def test_encode_one_setting():
-    encoded, _ = encode({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 10}},
+    encoded, _ = encode({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}},
                          'expected_type': 'list'},
                         {'GCTimeRatio': {'value': 59}})
     assert sorted(encoded) == sorted(['-XX:GCTimeRatio=59'])
@@ -282,7 +282,7 @@ def test_encode_no_values_provided():
                {})
 
     with pytest.raises(SettingRuntimeException):
-        encode({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 10}}},
+        encode({'settings': {'GCTimeRatio': {'min': 9, 'max': 99, 'step': 1}}},
                {})
 
 

@@ -185,7 +185,7 @@ class GCTimeRatioSetting(RangeSetting):
     name = 'GCTimeRatio'
     min = 9
     max = 99
-    step = 10
+    step = 1
     relaxable = False
 
 
