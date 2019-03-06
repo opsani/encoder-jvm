@@ -229,6 +229,7 @@ class GCTypeSetting(BaseRangeSetting):
 
     def describe(self):
         name, descr = super().describe()
+        descr['values'] = [*self.values]
         del descr['min']
         del descr['max']
         del descr['step']
@@ -251,6 +252,14 @@ class GCTypeSetting(BaseRangeSetting):
         if default is not None and default not in self.supported_values:
             raise SettingConfigException('Provided default value in setting GCType is not allowed. '
                                          'Found {}. Supported {}.'.format(default, ', '.join(self.supported_values)))
+
+    def validate_value(self, value):
+        if value not in self.values:
+            raise SettingRuntimeException('Provided value {} for encode is not '
+                                          'one of the available ones: {}.'.format(q(value), ', '.join(self.values)))
+        value = self.values.index(value)
+        value = super().validate_value(value)
+        return value
 
     def encode_option(self, value):
         value = self.validate_value(value)

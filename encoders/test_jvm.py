@@ -347,7 +347,7 @@ def test_encode_range_setting_value_validation():
 
 # GC Type
 def test_describe_gc_type():
-    selected_gcs = ('ParNewGC', 'G1GC', 'ParallelOldGC')
+    selected_gcs = ['ParNewGC', 'G1GC', 'ParallelOldGC']
     supported_gcs = set(GCTypeSetting.supported_values)
     template = '-XX:{}Use{}'
 
@@ -363,15 +363,15 @@ def test_describe_gc_type():
             config = {'settings': {'GCType': {'values': selected_gcs,
                                               'disable_others': disable_others}}}
             descriptor = describe(config, input_data)
-            assert descriptor == {'GCType': {'value': current_gc, 'type': 'enum', 'unit': ''}}
+            assert descriptor == {'GCType': {'value': current_gc, 'values': selected_gcs, 'type': 'enum', 'unit': ''}}
 
 
 def test_describe_gc_type_default_value_provided():
+    selected_gcs = ['G1GC', 'ConcMarkSweepGC', 'ParNewGC', 'ParallelOldGC']
     # Test default value
-    config = {'settings': {'GCType': {'values': ('G1GC', 'ConcMarkSweepGC', 'ParNewGC', 'ParallelOldGC'),
-                                      'default': 'ParNewGC'}}}
+    config = {'settings': {'GCType': {'values': selected_gcs, 'default': 'ParNewGC'}}}
     descriptor = describe(config, [])
-    assert descriptor == {'GCType': {'value': 'ParNewGC', 'type': 'enum', 'unit': ''}}
+    assert descriptor == {'GCType': {'value': 'ParNewGC', 'values': selected_gcs, 'type': 'enum', 'unit': ''}}
 
 
 def test_describe_gc_type_no_default_value_provided():
@@ -415,7 +415,7 @@ def test_encode_gc_type():
 
     # Test all the available GCs with and without disabling other types
     for disable_others in (True, False):
-        for index, current_gc in enumerate(selected_gcs):
+        for current_gc in selected_gcs:
             config = {'settings': {'GCType': {'values': selected_gcs, 'disable_others': disable_others}}}
             expected = []
             if disable_others:
@@ -423,5 +423,11 @@ def test_encode_gc_type():
                 for gc in sorted(disabled_gcs):
                     expected.append(template.format('-', gc))
             expected.append(template.format('+', current_gc))
-            encoded, _ = encode(config, {'GCType': {'value': index}}, list)
+            encoded, _ = encode(config, {'GCType': {'value': current_gc}}, list)
             assert encoded == expected
+
+
+def test_encode_gc_type_unsupported_value_provided():
+    selected_gcs = ('ParNewGC', 'G1GC', 'ParallelOldGC')
+    with pytest.raises(SettingRuntimeException):
+        encode({'settings': {'GCType': {'values': selected_gcs}}}, {'GCType': {'value': 'CerealGC'}}, list)
