@@ -92,7 +92,7 @@ class RangeSetting(BaseRangeSetting):
 
     def get_value_encoder(self):
         if callable(self.value_encoder):
-            return self.value_encoder(self)
+            return self.value_encoder()
         return self.value_encoder
 
     def encode_option(self, value):
