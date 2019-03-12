@@ -307,7 +307,7 @@ class UseCMSInitiatingOccupancyOnlySetting(BooleanSetting):
 
 
 class CMSInitiatingOccupancyFractionSetting(RangeSetting):
-    value_encoder = IntToStrValueEncoder
+    value_encoder = IntToStrValueEncoder()
     name = 'CMSInitiatingOccupancyFraction'
     min = 50
     max = 95
