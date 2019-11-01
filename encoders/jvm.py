@@ -189,6 +189,69 @@ class GCTimeRatioSetting(RangeSetting):
     relaxable = False
 
 
+class G1NewSizePercentSetting(RangeSetting):
+    value_encoder = IntToStrValueEncoder()
+    name = 'G1NewSizePercent'
+    min = 0
+    max = 100
+    step = 1
+    default = 5
+
+
+class G1MixedGCLiveThresholdPercentSetting(RangeSetting):
+    value_encoder = IntToStrValueEncoder()
+    name = 'G1MixedGCLiveThresholdPercent'
+    min = 0
+    max = 100
+    step = 1
+    default = 65
+
+
+class MaxGCPauseMillisSetting(RangeSetting):
+    value_encoder = IntToStrValueEncoder()
+    name = 'MaxGCPauseMillis'
+    min = 1
+    max = 1000
+    step = 1
+    default = 200
+
+
+class NewRatioSetting(RangeSetting):
+    value_encoder = IntToStrValueEncoder()
+    name = 'NewRatio'
+    min = 1
+    max = 99
+    step = 1
+    default = 2
+
+
+class SurvivorRatioSetting(RangeSetting):
+    value_encoder = IntToStrValueEncoder()
+    name = 'SurvivorRatio'
+    min = 1
+    max = 99
+    step = 1
+    default = 8
+
+
+class TargetSurvivorRatioSetting(RangeSetting):
+    value_encoder = IntToStrValueEncoder()
+    name = 'TargetSurvivorRatio'
+    min = 9
+    max = 99
+    step = 1
+    default = 50
+
+
+class StackShadowPagesSetting(RangeSetting):
+    value_encoder = IntToStrValueEncoder()
+    name = 'StackShadowPages'
+    min = 0
+    max = 100
+    step = 1
+    default = 20
+
+
 class GCTypeSetting(BaseRangeSetting):
     name = 'GCType'
     type = 'enum'

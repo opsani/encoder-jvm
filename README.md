@@ -71,6 +71,48 @@ UseCMSInitiatingOccupancyOnly:
 
 UseStringDeduplication:
   default: False
+
+G1NewSizePercent:
+    min = 0
+    max = 100
+    step = 1
+    default = 50
+
+G1MixedGCLiveThresholdPercent:
+    min = 0
+    max = 100
+    step = 1
+    default = 65
+
+MaxGCPauseMillis:
+    min = 1
+    max = 1000
+    step = 1
+    default = 200
+
+NewRatio:
+    min = 1
+    max = 99
+    step = 1
+    default = 2
+
+SurvivorRatio:
+    min = 1
+    max = 99
+    step = 1
+    default = 8
+
+TargetSurvivorRatio:
+    min = 9
+    max = 99
+    step = 1
+    default = 50
+
+StackShadowPages:
+    min = 0
+    max = 100
+    step = 1
+    default = 20
 ```
 
 ## Important notes on configuring settings
