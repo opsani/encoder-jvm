@@ -431,3 +431,59 @@ def test_encode_gc_type_unsupported_value_provided():
     selected_gcs = ('ParNewGC', 'G1GC', 'ParallelOldGC')
     with pytest.raises(SettingRuntimeException):
         encode({'settings': {'GCType': {'values': selected_gcs}}}, {'GCType': {'value': 'CerealGC'}}, list)
+
+# additional options
+def test_encode_G1NewSizePercent():
+    encoded, _ = encode({'settings': {'G1NewSizePercent': {'min': 0, 'max': 100, 'step': 1}},
+                         'expected_type': 'str'},
+                        {'G1NewSizePercent': {'value': 35},})
+    assert sorted(encoded) == sorted('-XX:G1NewSizePercent=35')
+
+
+def test_encode_G1ReservePercent():
+    encoded, _ = encode({'settings': {'G1ReservePercent': {'min': 0, 'max': 100, 'step': 1}},
+                         'expected_type': 'str'},
+                        {'G1ReservePercent': {'value': 5},})
+    assert sorted(encoded) == sorted('-XX:G1ReservePercent=5')
+
+
+def test_encode_G1MixedGCLiveThresholdPercent():
+    encoded, _ = encode({'settings': {'G1MixedGCLiveThresholdPercent': {'min': 0, 'max': 100, 'step': 1}},
+                         'expected_type': 'str'},
+                        {'G1MixedGCLiveThresholdPercent': {'value': 65},})
+    assert sorted(encoded) == sorted('-XX:G1MixedGCLiveThresholdPercent=65')
+
+
+def test_encode_MaxGCPauseMillis():
+    encoded, _ = encode({'settings': {'MaxGCPauseMillis': {'min': 1, 'max': 1000, 'step': 1}},
+                         'expected_type': 'str'},
+                        {'MaxGCPauseMillis': {'value': 200},})
+    assert sorted(encoded) == sorted('-XX:MaxGCPauseMillis=200')
+
+
+def test_encode_NewRatio():
+    encoded, _ = encode({'settings': {'NewRatio': {'min': 1, 'max': 99, 'step': 1}},
+                         'expected_type': 'str'},
+                        {'NewRatio': {'value': 2},})
+    assert sorted(encoded) == sorted('-XX:NewRatio=2')
+
+
+def test_encode_SurvivorRatio():
+    encoded, _ = encode({'settings': {'SurvivorRatio': {'min': 1, 'max': 99, 'step': 1}},
+                         'expected_type': 'str'},
+                        {'SurvivorRatio': {'value': 8},})
+    assert sorted(encoded) == sorted('-XX:SurvivorRatio=8')
+
+
+def test_encode_TargetSurvivorRatio():
+    encoded, _ = encode({'settings': {'TargetSurvivorRatio': {'min': 1, 'max': 99, 'step': 1}},
+                         'expected_type': 'str'},
+                        {'TargetSurvivorRatio': {'value': 50},})
+    assert sorted(encoded) == sorted('-XX:TargetSurvivorRatio=50')
+
+
+def test_encode_StackShadowPages():
+    encoded, _ = encode({'settings': {'StackShadowPages': {'min': 0, 'max': 100, 'step': 1}},
+                         'expected_type': 'str'},
+                        {'StackShadowPages': {'value': 20},})
+    assert sorted(encoded) == sorted('-XX:StackShadowPages=20')
