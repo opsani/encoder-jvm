@@ -76,7 +76,13 @@ G1NewSizePercent:
     min = 0
     max = 100
     step = 1
-    default = 50
+    default = 5
+
+G1ReservePercent:
+    min = 0
+    max = 100
+    step = 1
+    default = 10
 
 G1MixedGCLiveThresholdPercent:
     min = 0

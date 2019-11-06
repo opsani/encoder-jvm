@@ -436,8 +436,15 @@ def test_encode_gc_type_unsupported_value_provided():
 def test_encode_G1NewSizePercent():
     encoded, _ = encode({'settings': {'G1NewSizePercent': {'min': 0, 'max': 100, 'step': 1}},
                          'expected_type': 'str'},
-                        {'G1NewSizePercent': {'value': 5},})
-    assert sorted(encoded) == sorted('-XX:G1NewSizePercent=5')
+                        {'G1NewSizePercent': {'value': 35},})
+    assert sorted(encoded) == sorted('-XX:G1NewSizePercent=35')
+
+
+def test_encode_G1ReservePercent():
+    encoded, _ = encode({'settings': {'G1ReservePercent': {'min': 0, 'max': 100, 'step': 1}},
+                         'expected_type': 'str'},
+                        {'G1ReservePercent': {'value': 5},})
+    assert sorted(encoded) == sorted('-XX:G1ReservePercent=5')
 
 
 def test_encode_G1MixedGCLiveThresholdPercent():

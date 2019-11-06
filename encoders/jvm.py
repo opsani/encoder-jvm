@@ -198,6 +198,15 @@ class G1NewSizePercentSetting(RangeSetting):
     default = 5
 
 
+class G1ReservePercentSetting(RangeSetting):
+    value_encoder = IntToStrValueEncoder()
+    name = 'G1ReservePercent'
+    min = 0
+    max = 100
+    step = 1
+    default = 10
+
+
 class G1MixedGCLiveThresholdPercentSetting(RangeSetting):
     value_encoder = IntToStrValueEncoder()
     name = 'G1MixedGCLiveThresholdPercent'
