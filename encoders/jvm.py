@@ -168,13 +168,11 @@ class MaxHeapSizeSetting(HeapSizeSetting):
 
 class InitialHeapSizeSetting(HeapSizeSetting):
     name = 'InitialHeapSize'
-    formats = ('X{shorthand}{value}', 'X{shorthand}:{value}')
     shorthand = 'ms'
 
 
 class InitialEdenHeapSizeSetting(HeapSizeSetting):
     name = 'InitialEdenHeapSize'
-    formats = ('X{shorthand}{value}', 'X{shorthand}:{value}')
     shorthand = 'mn'
     min = 32 / 1024
     step = 32 / 1024
