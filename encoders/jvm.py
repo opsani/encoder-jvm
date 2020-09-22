@@ -9,8 +9,9 @@ from encoders.base import Encoder as BaseEncoder, RangeSetting as BaseRangeSetti
 
 # valid mem units: E, P, T, G, M, K, Ei, Pi, Ti, Gi, Mi, Ki
 # nb: 'm' suffix found after setting 0.7Gi
-mumap = {"E":1000**6,  "P":1000**5,  "T":1000**4,  "G":1000**3,  "M":1000**2,  "K":1000, "m":1000**-1,
-         "Ei":1024**6, "Pi":1024**5, "Ti":1024**4, "Gi":1024**3, "Mi":1024**2, "Ki":1024}
+# NOTE: we assume all values are their "ebi" variants, even if they lack the "i"
+mumap = {"e":1024**6,  "p":1024**5,  "t":1024**4,  "g":1024**3,  "m":1024**2,  "k":1024,
+         "ei":1024**6, "pi":1024**5, "ti":1024**4, "gi":1024**3, "mi":1024**2, "ki":1024}
 
 class IntToGbValueEncoder:
 
@@ -20,10 +21,10 @@ class IntToGbValueEncoder:
 
     @staticmethod
     def decode(data):
-        data = data.strip()
+        data = data.strip().lower()
         for u, m in mumap.items():
             if data.endswith(u):
-                return (float(data[:-len(u)]) * m) / mumap["Gi"]
+                return (float(data[:-len(u)]) * m) / mumap["gi"]
 
         raise ValueError('Unable to decode value {} to gigabytes.'.format(q(data)))
         # return float(s) assume to be bytes?
